@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GROUP 6 // SYSTEM_CORE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Rajdhani:wght@400;700&display=swap');
+        :root { --neon: #00f3ff; }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #020508; 
+            color: #fff; 
+            font-family: 'Rajdhani', sans-serif; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+        }
+
+        /* Matrix Canvas - Fixed at the very back */
+        canvas { 
+            position: fixed; 
+            top: 0; left: 0; 
+            z-index: -1; 
+        }
+
+        .header { 
+            margin-bottom: 60px; 
+            font-family: 'Audiowide'; 
+            color: var(--neon); 
+            font-size: 3rem; 
+            text-shadow: 0 0 20px var(--neon); 
+        }
+
+        #hub { 
+            display: flex; align-items: center; justify-content: center; gap: 20px;
+            transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        /* Solid background prevents rain from bleeding through cards */
+       /* Solid background forces the cards to block the background entirely */
+/* 1. Remove opacity from the base card */
+.card { 
+    background-color: #020508 !important; 
+    border: 1px solid rgba(0, 243, 255, 0.4);
+    border-radius: 15px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    cursor: pointer; 
+    transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1); 
+    overflow: hidden;
+    position: relative;
+    z-index: 10;
+}
+
+/* 2. Style images to be fully opaque */
+.card img {
+    width: 100%; 
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    opacity: 1; /* Ensure image is solid */
+}
+
+/* 3. Use size/scale for depth, NOT opacity */
+.card.edge { 
+    width: 220px; 
+    height: 330px; 
+    transform: scale(0.85);
+    filter: brightness(0.4); /* Use filter to darken, not opacity! */
+}
+.card.side { 
+    width: 280px; 
+    height: 420px; 
+    transform: scale(0.95);
+    filter: brightness(0.7); /* Darken side cards without transparency */
+}
+   /* Update your active card to ensure it has enough room */
+/* The Active Card - Your requested glowing style */
+.card.active { 
+    width: 360px; 
+    height: 540px; 
+    opacity: 1; 
+    transform: scale(1.05); 
+    border: 2px solid var(--neon); 
+    box-shadow: 0 0 40px var(--neon); 
+    z-index: 10;
+    /* Ensure solid background is maintained */
+    background-color: #020508 !important; 
+    /* Required to keep the card solid */
+    position: relative;
+}
+
+/* Remove the 'before/after' orb logic since you want the glow border instead */
+.card.active::before, 
+.card.active::after {
+    display: none; 
+}
+
+/* Update the button to sit neatly at the bottom */
+  .portfolio-btn {
+    position: absolute;
+    bottom: 30px; /* Positioned higher */
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--neon);
+    border: 2px solid var(--neon);
+    padding: 15px 30px; /* Larger padding for a bigger button */
+    text-decoration: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem; /* Larger font */
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    z-index: 20;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+}
+.portfolio-btn:hover {
+    background: var(--neon);
+    color: #020508;
+    box-shadow: 0 0 20px var(--neon), 0 0 40px var(--neon);
+    transform: scale(1.05);
+}
+/* Hide button by default on non-active cards */
+.card .portfolio-btn {
+    display: none;
+}
+
+/* Show button only when the card is active */
+.card.active .portfolio-btn {
+    display: block;
+}
+    </style>
+</head>
+<body>
+    <canvas id="matrix"></canvas>
+    <h1 class="header">GROUP 6</h1>
+
+    <div id="hub">
+       <div class="card edge" onclick="select(this)">
+    <img src="Me.png" alt="Me">
+    <a href="Myportfolio.html" class="portfolio-btn" onclick="event.stopPropagation()">View Portfolio</a>
+</div>
+        <div class="card side"  onclick="select(this)">
+    <img src="Me.png " alt="Me">
+    <a href="Myportfolio.html" class="portfolio-btn" onclick="event.stopPropagation()">View Portfolio</a>
+</div>
+        <div class="card active"  onclick="select(this)">
+    <img src="Me.png" alt="Me">
+    <a href="Myportfolio.html" class="portfolio-btn" onclick="event.stopPropagation()">View Portfolio</a>
+</div>
+        <div class="card side"  onclick="select(this)">
+    <img src="Me.png" alt="Me">
+    <a href="Myportfolio.html" class="portfolio-btn" onclick="event.stopPropagation()">View Portfolio</a>
+</div>
+        <div class="card edge"  onclick="select(this)">
+    <img src="Me.png" alt="Me">
+    <a href="Myportfolio.html" class="portfolio-btn" onclick="event.stopPropagation()">View Portfolio</a>
+</div>
+    </div>
+
+    <script>
+        const hub = document.getElementById('hub');
+        function select(clickedCard) {
+            const cards = Array.from(document.querySelectorAll('.card'));
+            const index = cards.indexOf(clickedCard);
+            const mid = 2;
+            const diff = index - mid;
+            for(let i = 0; i < Math.abs(diff); i++) {
+                if (diff > 0) hub.appendChild(hub.firstElementChild);
+                else hub.prepend(hub.lastElementChild);
+            }
+            const newCards = Array.from(document.querySelectorAll('.card'));
+            newCards.forEach((c, i) => {
+                c.className = 'card';
+                if (i === 2) c.classList.add('active');
+                else if (i === 1 || i === 3) c.classList.add('side');
+                else c.classList.add('edge');
+            });
+        }
+
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const fontSize = 12;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+        const katakana = 'アァカサタナハマヤラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユルグズヅブプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨロヲゴゾドボポヴッン';
+
+        function draw() {
+            ctx.fillStyle = 'rgba(2, 5, 8, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00f3ff';
+            ctx.font = fontSize + 'px monospace';
+            for (let i = 0; i < drops.length; i++) {
+                const text = katakana.charAt(Math.floor(Math.random() * katakana.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(draw, 33);
+    </script>
+</body>
+</html>
